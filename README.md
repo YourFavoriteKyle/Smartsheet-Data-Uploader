@@ -1,6 +1,11 @@
 # Smartsheet Data Tracker
 A command line application that updates an existing sheet with data from external sources.
 
+## Disclaimer
+
+This repository originated from the work done at [smartsheet-platform/Smartsheet-Data-Tracker](https://github.com/smartsheet-platform/Smartsheet-Data-Tracker).
+To keep track of changes made from the original work, the [Smartsheet-Data-Tracker](https://github.com/YourFavoriteKyle/Smartsheet-Data-Uploader/tree/Smartsheet-Data-Tracker) branch was added and locked.
+
 ## Purpose
 
 The Smartsheet Data Tracker is an application that uses one or more external data sources to update existing rows in a Smartsheet with values determined by a lookup column in the sheet.
