@@ -1,4 +1,10 @@
 *.pyc
 .DS_Store
 
+# Ignore environment files
+venv
+*.log
 
+# Persist original sample data, ignore new sample data
+dataTracker/sampleData/*.csv
+!dataTracker/sampleData/{employees, issues}.csv
