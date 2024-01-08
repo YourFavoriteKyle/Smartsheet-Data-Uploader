@@ -27,7 +27,7 @@ class Config:
 		return None
 
 	def endBadly(self):
-		print "Data Tracker ended badly due to an error. Please check the log for more details."
+		print("Data Tracker ended badly due to an error. Please check the log for more details.")
 		sys.exit(1)
 
 	def getConfigFromFile(self, fileName):
@@ -37,8 +37,8 @@ class Config:
 			with open(os.getcwd() + "/settings/" + fileName) as theFile:
 				config = json.load(theFile)
 		except ValueError as e:
-			print "Uh oh. The following problem occured while trying to read {}: {}".format(fileName,e)
-			print "Please make sure the file contains properly formatted JSON."
+			print("Uh oh. The following problem occured while trying to read {}: {}".format(fileName,e))
+			print("Please make sure the file contains properly formatted JSON.")
 		return config
 
 	def getLogger(self, appConfig):
@@ -101,7 +101,7 @@ class Config:
 					theLogger.error("Mapping with sheetId {} has an invalid source attribute in mapping.json.".format(mappingConfig['sheetId']))
 					self.endBadly()
 
-			except KeyError, error_message:
+			except KeyError as error_message:
 				if str(error_message) == '\'sheetId\'':
 					theLogger.error("A mapping needs a sheetId setting specified in mapping.json.")
 					self.endBadly()
@@ -123,7 +123,7 @@ class Config:
 			if len(mapping["sheetColumn"]) == 0:
 				theLogger.error("The sheetColumn value is blank for a {} mapping attribute for sourceId {} in mapping.json.".format(mappingType,sourceId))
 				self.endBadly()
-		except KeyError, error_message:
+		except KeyError as error_message:
 				# this error happens if either of the mapping attributes don't exist
 				theLogger.error("{}Mapping for sourceId {} is missing a {} attribute in mapping.json.".format(mappingType,sourceId,error_message))
 				self.endBadly()
@@ -148,7 +148,7 @@ class Config:
 					self.endBadly()
 
 			isStrict = sourceConfig['isStrict']
-		except KeyError, error_message:
+		except KeyError as error_message:
 			if str(error_message) == '\'sourceId\'':
 				theLogger.error("A source with the connectorClassName of CSVSource needs a sourceId setting specified in sources.json.")
 				self.endBadly()			

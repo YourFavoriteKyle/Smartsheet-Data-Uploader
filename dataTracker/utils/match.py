@@ -42,7 +42,7 @@ class Match:
 				logger.info('outputMap: {}'.format(outputMap))
 				try:
 					payload.append({'columnId': outputMap['sheetColumnId'], 'value': sourceMatch[outputMap['sourceKey']], 'strict':source['isStrict']})
-				except KeyError, error_message:
+				except KeyError as error_message:
 					
 					if str(error_message) == '\'sheetColumnId\'':
 						logger.warning('The {} was not set for the sheetColumn: {} in source: {}. Verify the sheetColumn value matches the column title in sheet: {}'.format(error_message,outputMap['sheetColumn'],mappingSource['sourceId'],sheetName))

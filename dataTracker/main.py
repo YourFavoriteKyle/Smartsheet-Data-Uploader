@@ -75,7 +75,7 @@ def main():
 				module = __import__('connectors.' + sourceConf['connectorClassName'], fromlist=[sourceConf['connectorClassName']])
 				sourceClass = getattr(module, sourceConf['connectorClassName'])
 				sourceConf['sourceObject'] = sourceClass(sourceConf)
-			except KeyError, error_message:
+			except KeyError as error_message:
 				logger.error('Source with id {} needs a connectorClassName attribute'.format(sourceConf['sourceId']))
 				theConfig.endBadly()
 	else:
@@ -96,10 +96,10 @@ def main():
 	theConfig.validateMappingConfig(mappings, logger)
 
 	print
-	print ' Smartsheet Data Tracker'
-	print '============================'
+	print(' Smartsheet Data Tracker')
+	print('============================')
 	if(appConfig['logFileName']):
-		print 'Logging to file: {}'.format(appConfig['logFileName'])
+		print('Logging to file: {}'.format(appConfig['logFileName']))
 	if len(mappings):
 
 		for mapping in mappings:
@@ -107,7 +107,7 @@ def main():
 			getSheetUrl = API_URL + "/sheets/" + str(mapping['sheetId'])
 			getSheetResponse = requests.get(getSheetUrl, headers=headers)
 			logger.info('get sheet response for {}: {}'.format(str(mapping['sheetId']), getSheetResponse.status_code))
-            		if getSheetResponse.status_code == 200:
+			if getSheetResponse.status_code == 200:
 				theSheet = getSheetResponse.json()
 			else:
 				logger.error('There was a problem getting sheet {}. '.format(mapping['sheetId']))
@@ -187,7 +187,7 @@ def sendUpdate(updateUrl, data, headers, attempt):
 	try:
 		# send update to smartsheet for each row
 		updateResponse = requests.put(updateUrl, data=data, headers=headers)
-	except requests.exceptions.ConnectionError, error_message:
+	except requests.exceptions.ConnectionError as error_message:
 		time.sleep(3)
 		# send update to smartsheet for each row
 		updateResponse = sendUpdateRetry(updateUrl, data, headers, attempt, error_message)
@@ -197,7 +197,7 @@ def sendUpdateRetry(updateUrl, payload, headers, attempt, exception):
 	maxAttempts = 3
 	response = {}
 
-	print 'updateRetry'
+	print('updateRetry')
 	if attempt < maxAttempts:
 		attempt = attempt + 1
 		response = sendUpdate(updateUrl, payload, headers, attempt)

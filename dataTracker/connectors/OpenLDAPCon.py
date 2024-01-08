@@ -64,8 +64,8 @@ class OpenLDAPCon:
 			self.l = ldap.open(self.ldapConfig["ldapServer"])
 			self.l.simple_bind_s(self.ldapConfig["adminUser"] + "," + self.ldapConfig["baseDN"],self.ldapConfig["adminPass"])
 			logger.info("Connected to LDAP at {}".format(self.ldapConfig["ldapServer"]))
-		except ldap.LDAPError, error_message:
-			logger.error("Couldn't connect to LDAP because of the following reason: {}".format(error_message), exc_info=TRUE)
+		except ldap.LDAPError as error_message:
+			logger.error("Couldn't connect to LDAP because of the following reason: {}".format(error_message), exc_info=True)
 		return None
 
 	def findSourceMatch(self, lookupVal, lookupKey):
@@ -88,7 +88,7 @@ class OpenLDAPCon:
 			for dn,entry in search_results:
 				for key,val in entry.items():
 					matchingRecord[key] = val[0]	
-		except ldap.LDAPError, error_message:
-			logger.error("LDAP Query busted because of the following reason: {} ".format(error_message, exc_info=TRUE))
+		except ldap.LDAPError as error_message:
+			logger.error("LDAP Query busted because of the following reason: {} ".format(error_message, exc_info=True))
 		
 		return matchingRecord

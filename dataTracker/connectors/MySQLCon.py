@@ -59,8 +59,8 @@ class MySQLCon:
 
 		# open db connection
 		try:
-		    self.con = MySQLdb.connect(self.mySqlConfig['dbServer'], self.mySqlConfig['dbUser'], self.mySqlConfig['dbPassword'], self.mySqlConfig['dbName'])
-		except MySQLdb.Error, e:
+			self.con = MySQLdb.connect(self.mySqlConfig['dbServer'], self.mySqlConfig['dbUser'], self.mySqlConfig['dbPassword'], self.mySqlConfig['dbName'])
+		except MySQLdb.Error as e:
 			logger.error("Error connecting to MySQL database: {}: {}".format(e.args[0],e.args[1]))
 			theConfig.endBadly()
 		return None
@@ -73,7 +73,7 @@ class MySQLCon:
 			cur = self.con.cursor()
 			cur.execute(self.mySqlConfig['lookupQuery'], lookupVal)
 			matchingRecord = cur.fetchone()
-		except MySQLdb.Error, e:
+		except MySQLdb.Error as e:
 			logger.error("DB Error {}: {}".format(e.args[0],e.args[1]))
 		
 		return matchingRecord

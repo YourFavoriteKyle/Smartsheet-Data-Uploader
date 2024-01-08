@@ -80,7 +80,7 @@ class RestGETJiraCon:
 
 		try:
 			respJSON = resp.json()
-		except ValueError, error_message:
+		except ValueError as error_message:
 			logger.error("ValueError for lookupMapping value '{}': {}".format(lookupVal, error_message))
 		try:
 			if self.apiConfig['isArray']:
@@ -89,7 +89,7 @@ class RestGETJiraCon:
 					matchingRecord.update(self.parseJiraFields(respJSON['issues'][0]['fields']))
 			else:
 				matchingRecord.update(self.parseJiraFields(respJSON['fields']))
-		except KeyError, error_message:
+		except KeyError as error_message:
 			logger.error("No Match for : {} ".format(self.apiConfig['apiUrl'].format(lookupVal)))
 
 		return matchingRecord
