@@ -8,3 +8,5 @@ venv
 # Persist original sample data, ignore new sample data
 dataTracker/sampleData/*.csv
 !dataTracker/sampleData/{employees, issues}.csv
+dataTracker/settings/*.json
+!dataTracker/settings/*.example.json
