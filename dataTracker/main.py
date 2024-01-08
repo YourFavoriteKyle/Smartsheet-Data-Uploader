@@ -104,6 +104,7 @@ def main():
 
 		for mapping in mappings:
 			rowsUpdatePayload = []
+			rowsDeletePayload = []
 			# get sheet
 			getSheetUrl = API_URL + "/sheets/" + str(mapping['sheetId'])
 			getSheetResponse = requests.get(getSheetUrl, headers=headers)
@@ -157,51 +158,63 @@ def main():
 							break
 					if 'lookupByRowId' in mappingSource['lookupMapping'] and mappingSource['lookupMapping']['lookupByRowId'] == True:
 						# lookup by rowId
-						cellsPayload.extend(theMatch.findMatch(sheetRow['id'], theSheet['name'], currentSource, mappingSource, mappingSource['lookupMapping']['sourceKey'], logger))
+						matches = theMatch.findMatch(sheetRow['id'], theSheet['name'], currentSource, mappingSource, mappingSource['lookupMapping']['sourceKey'], logger)
+						if matches != 'Delete':
+							cellsPayload.extend(matches)
+						else:
+							rowsDeletePayload.append(sheetRow['id'])
 					else:
 						for cell in sheetRow['cells']:
 							# find lookup value match
 							if cell['columnId'] == mappingSource['lookupMapping']['sheetColumnId']:
 
 								if 'displayValue' in cell:
-									cellsPayload.extend(theMatch.findMatch(cell['displayValue'], theSheet['name'], currentSource, mappingSource, mappingSource['lookupMapping']['sourceKey'], logger))
+									matches = theMatch.findMatch(cell['displayValue'], theSheet['name'], currentSource, mappingSource, mappingSource['lookupMapping']['sourceKey'], logger)
+									if matches != 'Delete':
+										cellsPayload.extend(matches)
+									else:
+										rowsDeletePayload.append(sheetRow['id'])
 				
 				rowsUpdatePayload.append({'id': sheetRow['id'], 'cells': cellsPayload})
-				
-			if len(rowsUpdatePayload):
-				payload = rowsUpdatePayload
-				attempt = 0
-				updateResponse = sendUpdate(getSheetUrl + '/rows/', data=json.dumps(payload), headers=headers, attempt=attempt)
-				# output api response
-				try:
-					if updateResponse.status_code == 200:
-						logger.info('Sheet {} Updated'.format(theSheet['name']))
-					else:
-						logger.warning('updateResponse: {}'.format(updateResponse.text))
-				except AttributeError:
-					logger.error(updateResponse)
+
+			payloads = [{'method': 'put', 'payload': rowsUpdatePayload}, {'method': 'delete', 'payload': rowsDeletePayload}]
+			for payload in payloads:
+				if len(payload['payload']):
+					attempt = 0
+					updateResponse = sendUpdate(getSheetUrl + '/rows', data=payload['payload'], headers=headers, attempt=attempt, method=payload['method'])
+					# output api response
+					try:
+						if updateResponse.status_code == 200:
+							logger.info('Sheet {} Updated'.format(theSheet['name']))
+						else:
+							logger.warning('updateResponse: {}'.format(updateResponse.text))
+					except AttributeError:
+						logger.error(updateResponse)
 		logger.info('===Smartsheet Data Tracker Utility Completed: {}'.format(str(datetime.datetime.now()).split('.')[0]))
 	else:
 		logger.error('There are no mappings configured. Please add a properly formatted mapping node to the mapping.json file.')
 
-def sendUpdate(updateUrl, data, headers, attempt):
+def sendUpdate(updateUrl, data, headers, attempt, method):
 	try:
-		# send update to smartsheet for each row
-		updateResponse = requests.put(updateUrl, data=data, headers=headers)
+		if method == 'delete':
+			updateResponse = requests.request(method, updateUrl + '?ids=' + ','.join(map(str, data)) + '&ignoreRowsNotFound=true', headers=headers)
+		else:
+			# send update to smartsheet for each row
+			updateResponse = requests.request(method, updateUrl, data=json.dumps(data), headers=headers)
 	except requests.exceptions.ConnectionError as error_message:
 		time.sleep(3)
 		# send update to smartsheet for each row
-		updateResponse = sendUpdateRetry(updateUrl, data, headers, attempt, error_message)
+		updateResponse = sendUpdateRetry(updateUrl, data, headers, attempt, method, error_message)
 	return updateResponse
 
-def sendUpdateRetry(updateUrl, payload, headers, attempt, exception):
+def sendUpdateRetry(updateUrl, payload, headers, attempt, method, exception):
 	maxAttempts = 3
 	response = {}
 
 	print('updateRetry')
 	if attempt < maxAttempts:
 		attempt = attempt + 1
-		response = sendUpdate(updateUrl, payload, headers, attempt)
+		response = sendUpdate(updateUrl, payload, headers, attempt, method)
 	else:
 		response = exception
 	return response

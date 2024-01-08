@@ -51,6 +51,7 @@ class Match:
 				except error_message:
 						logger.warning(error_message)
 		else:
-			logger.info('No Match')	
+			logger.info('No Match')
+			return 'Delete'
 		
 		return payload
