@@ -103,6 +103,7 @@ def main():
 	if len(mappings):
 
 		for mapping in mappings:
+			rowsUpdatePayload = []
 			# get sheet
 			getSheetUrl = API_URL + "/sheets/" + str(mapping['sheetId'])
 			getSheetResponse = requests.get(getSheetUrl, headers=headers)
@@ -145,9 +146,7 @@ def main():
 					if 'sheetColumnId' not in outM:
 						logger.warning('Output column {} not found in sheet {}'.format(outM['sheetColumn'], theSheet['name']))
 			for sheetRow in theSheet['rows']:
-				sourceMatch = [] # init sourceMatch
 				cellsPayload = [] # init payload
-				updateRowUrl = getSheetUrl + '/rows/' + str(sheetRow['id'])
 
 				for mappingSource in mapping['sources']:
 					logger.info('Source: {}'.format(mappingSource['sourceId']))
@@ -167,18 +166,20 @@ def main():
 								if 'displayValue' in cell:
 									cellsPayload.extend(theMatch.findMatch(cell['displayValue'], theSheet['name'], currentSource, mappingSource, mappingSource['lookupMapping']['sourceKey'], logger))
 				
-				if len(cellsPayload):
-					payload = { 'cells': cellsPayload }
-					attempt = 0
-					updateResponse = sendUpdate(updateRowUrl, data=json.dumps(payload), headers=headers, attempt=attempt)
-					# output api response
-					try:
-						if updateResponse.status_code == 200:
-							logger.info('Sheet {} Updated'.format(theSheet['name']))
-						else:
-							logger.warning('updateResponse: {}'.format(updateResponse.text))
-					except AttributeError:
-						logger.error(updateResponse)
+				rowsUpdatePayload.append({'id': sheetRow['id'], 'cells': cellsPayload})
+				
+			if len(rowsUpdatePayload):
+				payload = rowsUpdatePayload
+				attempt = 0
+				updateResponse = sendUpdate(getSheetUrl + '/rows/', data=json.dumps(payload), headers=headers, attempt=attempt)
+				# output api response
+				try:
+					if updateResponse.status_code == 200:
+						logger.info('Sheet {} Updated'.format(theSheet['name']))
+					else:
+						logger.warning('updateResponse: {}'.format(updateResponse.text))
+				except AttributeError:
+					logger.error(updateResponse)
 		logger.info('===Smartsheet Data Tracker Utility Completed: {}'.format(str(datetime.datetime.now()).split('.')[0]))
 	else:
 		logger.error('There are no mappings configured. Please add a properly formatted mapping node to the mapping.json file.')
