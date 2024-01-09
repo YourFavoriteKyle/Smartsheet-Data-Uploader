@@ -197,7 +197,9 @@ def main():
 def sendUpdate(updateUrl, data, headers, attempt, method):
 	try:
 		if method == 'delete':
-			updateResponse = requests.request(method, updateUrl + '?ids=' + ','.join(map(str, data)) + '&ignoreRowsNotFound=true', headers=headers)
+			updateUrl = updateUrl + '?ids='
+			for req in chunkURI(updateUrl, data):
+				updateResponse = requests.request(method, updateUrl + req + '&ignoreRowsNotFound=true', headers=headers)
 		else:
 			# send update to smartsheet for each row
 			updateResponse = requests.request(method, updateUrl, data=json.dumps(data), headers=headers)
@@ -218,6 +220,26 @@ def sendUpdateRetry(updateUrl, payload, headers, attempt, method, exception):
 	else:
 		response = exception
 	return response
+
+def chunkURI(baseURL, params: list):
+	# capped at 2000 characters for wide range support as Smartsheet doesn't tell us what the limit is
+	maxCharacters = 2000
+	availableCharacters = maxCharacters - len(baseURL)
+	chunk = ''
+
+	for param in params:
+		param = str(param)
+		# add 1 magic number to account for the comma that will be appended
+		if len(chunk) + len(param) + 1 < availableCharacters:
+			chunk += "{},".format(param)
+		else:
+			yield chunk[:-1]
+			# since we iterated, we need to use the item so we don't lose it
+			# clear and set the current param after yielding the max length
+			chunk = "{},".format(param)
+
+	# yield the last chunk
+	yield chunk[:-1]
 
 
 if __name__ == '__main__':
