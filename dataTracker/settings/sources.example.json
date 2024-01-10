@@ -6,7 +6,8 @@
     "username": "yourUsername",
     "password": "yourPassword",
     "isArray": false,
-    "isStrict": false
+    "isStrict": false,
+    "hasHeaders": false
   },
   {
     "sourceId": "jiraIssueAPI",
@@ -16,7 +17,8 @@
     "password": "yourPassword",
     "isArray": false,
     "isStrict": false,
-    "isSearch": false
+    "isSearch": false,
+    "hasHeaders": false
   },
   {
     "sourceId": "jiraSearchAPI",
@@ -26,14 +28,16 @@
     "password": "yourPassword",
     "isArray": true,
     "isStrict": false,
-    "isSearch": true
+    "isSearch": true,
+    "hasHeaders": false
   },
   {
     "sourceId": "markitOnDemandAPI",
     "connectorClassName": "RestGETCon",
     "apiUrl": "http://dev.markitondemand.com/Api/v2/Quote/json?symbol={}",
     "isArray": false,
-    "isStrict": false
+    "isStrict": false,
+    "hasHeaders": false
   },
   {
     "sourceId": "openldap",
@@ -46,7 +50,8 @@
     "searchFilter": "cn=*{}*",
     "retrieveAttributes": "givenName,sn,roomNumber,mail,telephoneNumber",
     "ldapTimeout": 0,
-    "isStrict": false
+    "isStrict": false,
+    "hasHeaders": false
   },
   {
     "sourceId": "productDB",
@@ -56,18 +61,21 @@
     "dbPassword": "root",
     "dbName": "dvDB",
     "lookupQuery": "SELECT sku,name,description,price,quantity FROM product WHERE sku = %s",
-    "isStrict": false
+    "isStrict": false,
+    "hasHeaders": false
   },
   {
     "sourceId": "issues",
     "connectorClassName": "CSVCon",
     "fileName": "issues.csv",
-    "isStrict": false
+    "isStrict": false,
+    "hasHeaders": false
   },
   {
     "sourceId": "employees",
     "connectorClassName": "CSVCon",
     "fileName": "employees.csv",
-    "isStrict": false
+    "isStrict": false,
+    "hasHeaders": false
   }
 ]

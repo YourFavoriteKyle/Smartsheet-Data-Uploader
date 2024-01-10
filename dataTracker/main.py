@@ -105,6 +105,7 @@ def main():
 		for mapping in mappings:
 			rowsUpdatePayload = []
 			rowsDeletePayload = []
+			rowsCreatePayload = []
 			# get sheet
 			getSheetUrl = API_URL + "/sheets/" + str(mapping['sheetId'])
 			getSheetResponse = requests.get(getSheetUrl, headers=headers)
@@ -146,6 +147,8 @@ def main():
 
 					if 'sheetColumnId' not in outM:
 						logger.warning('Output column {} not found in sheet {}'.format(outM['sheetColumn'], theSheet['name']))
+			
+			# row update and delete loop
 			for sheetRow in theSheet['rows']:
 				cellsPayload = [] # init payload
 
@@ -177,7 +180,31 @@ def main():
 				
 				rowsUpdatePayload.append({'id': sheetRow['id'], 'cells': cellsPayload})
 
-			payloads = [{'method': 'put', 'payload': rowsUpdatePayload}, {'method': 'delete', 'payload': rowsDeletePayload}]
+			# new row loop
+			for mappingSource in mapping['sources']:
+				logger.info('Source: {}'.format(mappingSource['sourceId']))
+
+				for source in sourceConfigs:
+					if source['sourceId'] == mappingSource['sourceId']:
+						currentSource = source
+						break
+				
+				for row in source['sourceObject'].csvData:
+					cellsPayload = []
+					matched = findSheetMatch(theSheet, row[mappingSource['lookupMapping']['sourceKey']], mappingSource['lookupMapping']['sheetColumnId'])
+					if not matched:
+						for outputMap in mappingSource['outputMappings']:
+							if source['hasHeaders'] and row == source['sourceObject'].csvData[0]:
+								break
+							else:
+								cellsPayload.append({'columnId': outputMap['sheetColumnId'], 'value': row[outputMap['sourceKey']], 'strict': source['isStrict']})
+						# do this check to prevent additions of empty rows
+						if len(cellsPayload):
+							rowsCreatePayload.append({'cells': cellsPayload, 'toBottom': True})
+						
+				
+
+			payloads = [{'method': 'put', 'payload': rowsUpdatePayload}, {'method': 'delete', 'payload': rowsDeletePayload}, {'method': 'post', 'payload': rowsCreatePayload}]
 			for payload in payloads:
 				if len(payload['payload']):
 					attempt = 0
@@ -195,8 +222,9 @@ def main():
 		logger.error('There are no mappings configured. Please add a properly formatted mapping node to the mapping.json file.')
 
 def sendUpdate(updateUrl, data, headers, attempt, method):
+	method = method.upper()
 	try:
-		if method == 'delete':
+		if method == 'DELETE':
 			updateUrl = updateUrl + '?ids='
 			for req in chunkURI(updateUrl, data):
 				updateResponse = requests.request(method, updateUrl + req + '&ignoreRowsNotFound=true', headers=headers)
@@ -240,6 +268,19 @@ def chunkURI(baseURL, params: list):
 
 	# yield the last chunk
 	yield chunk[:-1]
+
+def findSheetMatch(sheet, lookupVal: any, lookupKey: int):
+	"""
+	Should find a match in the stored sheet data based on the target value and the column id
+	Should return a bool indicating if a match was found
+	"""
+
+	for sheetRow in sheet['rows']:
+		for cell in sheetRow['cells']:
+			if cell['columnId'] == lookupKey and cell['value'] == lookupVal:
+				return True
+			
+	return False
 
 
 if __name__ == '__main__':
