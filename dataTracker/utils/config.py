@@ -19,10 +19,14 @@ import json
 import logging
 import logging.handlers
 import sys
+import requests
+from io import StringIO
 
 class Config:
-	def __init__(self):
+	def __init__(self, configDir: str = "settings"):
 		loggers = {}
+		self.baseDir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+		self.configDir = configDir
 
 		return None
 
@@ -34,11 +38,22 @@ class Config:
 		config = []
 
 		try:
-			with open(os.getcwd() + "/settings/" + fileName) as theFile:
+			with open(os.path.join(self.baseDir, self.configDir, fileName)) as theFile:
 				config = json.load(theFile)
 		except ValueError as e:
 			print("Uh oh. The following problem occured while trying to read {}: {}".format(fileName,e))
 			print("Please make sure the file contains properly formatted JSON.")
+		return config
+	
+	def getConfigFromURL(self, url):
+		config = []
+
+		try:
+			res = requests.get(url, stream=True)
+			config = res.json()
+		except Exception as e:
+			print("Error loading config from URL. Error: {}".format(e))
+
 		return config
 
 	def getLogger(self, appConfig):
@@ -160,4 +175,10 @@ class Config:
 
 		return sourceConfig
 
-		
+	def saveConfigToFile(self, config, filename, logger):
+		try:
+			with open(os.path.join(self.baseDir, self.configDir, filename), 'w') as configFile:
+				json.dump(config, configFile, ensure_ascii=False, indent=2)
+		except Exception as e:
+			logger.error("Error writing config file: {}".format(e))
+

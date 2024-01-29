@@ -27,6 +27,7 @@
 
 from utils import config
 from utils import match
+from generator import Generator
 
 import requests
 import json
@@ -58,6 +59,8 @@ def main():
 	ACCESS_TOKEN = 'Bearer ' + appConfig['accessToken']
 	headers = {'Authorization': ACCESS_TOKEN}
 
+	generator = Generator()
+
 	"""
 	 read sources config
 	 array of sources
@@ -71,6 +74,9 @@ def main():
 	# loop source configs and initialize sourceConfig objects
 	if len(sourceConfigs):
 		for sourceConf in sourceConfigs:
+			if sourceConf['cloud'] == True:
+				logger.info('Delegating source load for source {} until updating target sheet.'.format(sourceConf['sourceId']))
+				continue
 			try:
 				module = __import__('connectors.' + sourceConf['connectorClassName'], fromlist=[sourceConf['connectorClassName']])
 				sourceClass = getattr(module, sourceConf['connectorClassName'])
@@ -147,7 +153,13 @@ def main():
 
 					if 'sheetColumnId' not in outM:
 						logger.warning('Output column {} not found in sheet {}'.format(outM['sheetColumn'], theSheet['name']))
-			
+
+			for source in sourceConfigs:
+				if source['cloud'] == True:
+					module = __import__('connectors.{}'.format(source['connectorClassName']), fromlist=[source['connectorClassName']])
+					sourceClass = getattr(module, source['connectorClassName'])
+					source['sourceObject'] = sourceClass(source)
+
 			# row update and delete loop
 			for sheetRow in theSheet['rows']:
 				cellsPayload = [] # init payload
@@ -177,7 +189,7 @@ def main():
 										cellsPayload.extend(matches)
 									else:
 										rowsDeletePayload.append(sheetRow['id'])
-				
+
 				rowsUpdatePayload.append({'id': sheetRow['id'], 'cells': cellsPayload})
 
 			# new row loop
@@ -188,21 +200,9 @@ def main():
 					if source['sourceId'] == mappingSource['sourceId']:
 						currentSource = source
 						break
-				
-				for row in source['sourceObject'].csvData:
-					cellsPayload = []
-					matched = findSheetMatch(theSheet, row[mappingSource['lookupMapping']['sourceKey']], mappingSource['lookupMapping']['sheetColumnId'])
-					if not matched:
-						for outputMap in mappingSource['outputMappings']:
-							if source['hasHeaders'] and row == source['sourceObject'].csvData[0]:
-								break
-							else:
-								cellsPayload.append({'columnId': outputMap['sheetColumnId'], 'value': row[outputMap['sourceKey']], 'strict': source['isStrict']})
-						# do this check to prevent additions of empty rows
-						if len(cellsPayload):
-							rowsCreatePayload.append({'cells': cellsPayload, 'toBottom': True})
-						
-				
+
+				cellsPayload = theMatch.findAllMissing(theSheet, currentSource, mappingSource, logger)
+				rowsCreatePayload.extend(cellsPayload)
 
 			payloads = [{'method': 'put', 'payload': rowsUpdatePayload}, {'method': 'delete', 'payload': rowsDeletePayload}, {'method': 'post', 'payload': rowsCreatePayload}]
 			for payload in payloads:
@@ -214,7 +214,7 @@ def main():
 						if updateResponse.status_code == 200:
 							logger.info('Sheet {} Updated'.format(theSheet['name']))
 						else:
-							logger.warning('updateResponse: {}'.format(updateResponse.text))
+							logger.warning('updateResponse for method {}: {}'.format(payload['method'], updateResponse.text))
 					except AttributeError:
 						logger.error(updateResponse)
 		logger.info('===Smartsheet Data Tracker Utility Completed: {}'.format(str(datetime.datetime.now()).split('.')[0]))
@@ -279,7 +279,7 @@ def findSheetMatch(sheet, lookupVal: any, lookupKey: int):
 		for cell in sheetRow['cells']:
 			if cell['columnId'] == lookupKey and cell['value'] == lookupVal:
 				return True
-			
+
 	return False
 
 
