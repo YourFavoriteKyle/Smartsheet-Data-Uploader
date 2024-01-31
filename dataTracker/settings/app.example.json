@@ -1,5 +1,7 @@
 {
   "accessToken": "",
+  "secretsId": 0,
+  "secretsFileName": "mapping.json",
   "apiURL": "https://api.smartsheet.com/2.0",
   "logLevel": "logging.WARNING",
   "logFileName": "dougFir.log",

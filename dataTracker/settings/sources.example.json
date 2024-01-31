@@ -69,13 +69,17 @@
     "connectorClassName": "CSVCon",
     "fileName": "issues.csv",
     "isStrict": false,
-    "hasHeaders": false
+    "hasHeaders": false,
+    "cloud": false,
+    "sheetId": 0
   },
   {
     "sourceId": "employees",
     "connectorClassName": "CSVCon",
     "fileName": "employees.csv",
     "isStrict": false,
-    "hasHeaders": false
+    "hasHeaders": false,
+    "cloud": false,
+    "sheetId": 0
   }
 ]

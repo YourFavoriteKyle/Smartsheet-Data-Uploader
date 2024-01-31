@@ -1,0 +1,45 @@
+[
+  {
+    "mappingName": "Template Mapping",
+    "reportId": 0,
+    "sources": [
+      {
+        "sourceId": "{{name}}",
+        "connectorClassName": "SheetCon",
+        "fileName": "{{name}}.csv",
+        "isStrict": false,
+        "hasHeaders": true,
+        "cloud": true,
+        "sheetId": "{{id}}"
+      }
+    ],
+    "mapping": [
+      {
+        "sheetId": "{{id}}",
+        "sources": [
+          {
+            "sourceId": "{{name}}",
+            "lookupMapping": {
+              "sourceKey": 0,
+              "sheetColumn": "Issue Id"
+            },
+            "outputMappings": [
+              {
+                "sourceKey": 1,
+                "sheetColumn": "Description"
+              },
+              {
+                "sourceKey": 2,
+                "sheetColumn": "Status"
+              },
+              {
+                "sourceKey": 3,
+                "sheetColumn": "Fixed"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
