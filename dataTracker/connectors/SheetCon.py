@@ -59,7 +59,6 @@ class SheetCon:
 
     def _loadCSV(self, data):
         self.data = pd.read_csv(data, keep_default_na=False)
-        print(self.data)
 
     def findSourceMatch(self, lookupVal, lookupKey):
         if len(self.data) == 0:
