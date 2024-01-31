@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./dataTracker/Dockerfile
+    container_name: Data-Uploader
+    volumes:
+      - ./dataTracker/logs:/home/dataTracker/logs
+      - ./dataTracker/settings:/home/dataTracker/settings
+
+  restarter:
+    image: docker:cli
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    command: ["/bin/sh", "-c", "while true; do sleep 60; docker restart Data-Uploader; done"]
+    restart: always
